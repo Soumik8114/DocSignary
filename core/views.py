@@ -1,12 +1,16 @@
 import base64
 import os
 import json
+import mimetypes
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.conf import settings
+from django.core.mail import EmailMessage
 from .models import UploadedFile,UserKeyPair
 from .utils import sign_message, decrypt_key,verify_signature
+from django.contrib.auth import authenticate
 from .forms import MultipleFileUploadForm
 from django.contrib.auth.models import User
 from django.views.generic import ListView
@@ -55,46 +59,51 @@ class UserFileListView(LoginRequiredMixin, ListView):
     context_object_name = 'files'
 
     def get_queryset(self):
-        # Fetch all files for the logged-in user
         files = UploadedFile.objects.filter(owner=self.request.user)
-
-        # Mark files as "new" if they were uploaded in the last 5 minutes
         from datetime import timedelta
         from django.utils.timezone import now
         recent_threshold = now() - timedelta(minutes=5)
         for file in files:
             file.is_new = file.upload_date >= recent_threshold
-
-        # Sort files: new files first, then by upload date (descending)
+            
         sorted_files = sorted(files, key=lambda f: (f.is_new, f.upload_date), reverse=True)
 
         return sorted_files
 
 @login_required
-def sign_file_view(request):
-    if request.method == 'POST':
-        try:
-            file_id = request.POST.get('file_id')
-            file_to_sign = get_object_or_404(UploadedFile, pk=file_id, owner=request.user)
+def sign_file_view(request, file_id):
+    file_to_sign = get_object_or_404(UploadedFile, pk=file_id, owner=request.user)
 
+    if file_to_sign.signature:
+        messages.warning(request, f"'{file_to_sign}' is already signed.")
+        return redirect('user_file_list')
+
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        user = authenticate(request, username=request.user.username, password=password)
+
+        if user is None:
+            messages.error(request, "Incorrect password. Please try again.")
+            return render(request, 'core/confirm_password_for_signing.html', {'file': file_to_sign})
+
+        try:
             key_pair = UserKeyPair.objects.get(user=request.user)
             decrypted_private_key = decrypt_key(key_pair.private_key_encrypted)
-
             file_content = file_to_sign.uploaded_file.read()
-
             signature_bytes = sign_message(decrypted_private_key, file_content)
             signature_base64 = base64.b64encode(signature_bytes).decode('utf-8')
 
             file_to_sign.signature = signature_base64
             file_to_sign.save()
 
-            messages.success(request, f"Successfully signed '{file_to_sign}'.")
+            messages.success(request, f"Successfully signed '{file_to_sign}'. ✅")
 
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
 
         return redirect('user_file_list')
-    return redirect('home')
+
+    return render(request, 'core/confirm_password_for_signing.html', {'file': file_to_sign})
 
 @login_required
 def download_signature_view(request, file_id):
@@ -117,6 +126,57 @@ def download_signature_view(request, file_id):
     response['Content-Disposition'] = f'attachment; filename="{signature_filename}"'
     
     return response
+
+@login_required
+def email_signature_view(request, file_id):
+    file_to_share = get_object_or_404(UploadedFile, pk=file_id, owner=request.user)
+
+    if not file_to_share.signature:
+        messages.error(request, "You can only share files that have been signed.")
+        return redirect('user_file_list')
+
+    if request.method == 'POST':
+        recipient_email = request.POST.get('recipient_email')
+        if not recipient_email:
+            return HttpResponseBadRequest("Recipient email is required.")
+
+        try:
+            # Prepare the signature JSON data
+            signature_data = {
+                'signer_username': file_to_share.owner.username,
+                'signature': file_to_share.signature
+            }
+            json_data = json.dumps(signature_data, indent=4)
+            original_filename, original_ext = os.path.splitext(file_to_share.uploaded_file.name)
+            signature_filename = f"{os.path.basename(original_filename).replace(' ', '_')}.json"
+
+            # Create the email
+            subject = f"Signed Document from {request.user.username}: {file_to_share}"
+            body = f"Hello,\n\nPlease find the signed document '{file_to_share}' and its corresponding signature file attached.\n\nTo verify the signature, you can use the verification tool on our website.\n\nRegards,\n{request.user.get_full_name() or request.user.username}"
+            
+            email = EmailMessage(
+                subject,
+                body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient_email],
+            )
+
+            # Determine the file's content type
+            content_type, encoding = mimetypes.guess_type(file_to_share.uploaded_file.name)
+            if content_type is None:
+                content_type = 'application/octet-stream'  # Default content type
+
+            # Attach the original file and the signature file
+            email.attach(file_to_share.uploaded_file.name, file_to_share.uploaded_file.read(), content_type)
+            email.attach(signature_filename, json_data, 'application/json')
+            email.send()
+
+            messages.success(request, f"Email sent successfully to {recipient_email}. 📧")
+            return redirect('user_file_list')
+        except Exception as e:
+            messages.error(request, f"Failed to send email. Error: {e}")
+
+    return render(request, 'core/email_signature.html', {'file': file_to_share})
 
 def verify_signature_view(request):
     if request.method == 'POST':

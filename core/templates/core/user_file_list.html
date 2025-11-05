@@ -42,6 +42,8 @@
                                         <li><a class="dropdown-item"
                                                 href="{% url 'download_signature' file.id %}">Download Signature</a>
                                         </li>
+                                        <li><a class="dropdown-item"
+                                                href="{% url 'email_signature' file.id %}">Share via Email</a></li>
                                         <li>
                                             <form id="deleteForm-{{ file.id }}" action="{% url 'delete_file' file.id %}" method="post" style="display: inline;">
                                                 {% csrf_token %}
@@ -74,11 +76,7 @@
                                         <li><a class="dropdown-item" href="{{ file.uploaded_file.url }}"
                                                 download>Download File</a></li>
                                         <li>
-                                            <form action="{% url 'sign_file' %}" method="post" class="mb-0">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="file_id" value="{{ file.id }}">
-                                                <button class="dropdown-item" type="submit">Sign File</button>
-                                            </form>
+                                            <a class="dropdown-item" href="{% url 'sign_file' file.id %}">Sign File</a>
                                         </li>
                                         <li>
                                             <form id="deleteForm-{{ file.id }}" action="{% url 'delete_file' file.id %}" method="post" style="display: inline;">
@@ -133,6 +131,7 @@
         </div>
     </div>
 </div>
+
 {% block scripts %}
 <script>
     const deleteModal = document.getElementById('deleteConfirmModal');
