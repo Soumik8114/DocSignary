@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.utils import timezone
 from .models import UploadedFile,UserKeyPair
 from .utils import sign_message, decrypt_key,verify_signature
 from django.contrib.auth import authenticate
@@ -90,10 +91,17 @@ def sign_file_view(request, file_id):
             key_pair = UserKeyPair.objects.get(user=request.user)
             decrypted_private_key = decrypt_key(key_pair.private_key_encrypted)
             file_content = file_to_sign.uploaded_file.read()
-            signature_bytes = sign_message(decrypted_private_key, file_content)
+
+            # Add timestamp to the signature
+            signed_at = timezone.now()
+            timestamp_str = signed_at.isoformat()
+            message = file_content + timestamp_str.encode('utf-8')
+
+            signature_bytes = sign_message(decrypted_private_key, message)
             signature_base64 = base64.b64encode(signature_bytes).decode('utf-8')
 
             file_to_sign.signature = signature_base64
+            file_to_sign.signed_at = signed_at
             file_to_sign.save()
 
             messages.success(request, f"Successfully signed '{file_to_sign}'. ✅")
@@ -115,7 +123,8 @@ def download_signature_view(request, file_id):
 
     signature_data = {
         'signer_username': file_object.owner.username,
-        'signature': file_object.signature
+        'signature': file_object.signature,
+        'timestamp': file_object.signed_at.isoformat() if file_object.signed_at else None
     }
 
     json_data = json.dumps(signature_data, indent=4)
@@ -144,7 +153,8 @@ def email_signature_view(request, file_id):
             # Prepare the signature JSON data
             signature_data = {
                 'signer_username': file_to_share.owner.username,
-                'signature': file_to_share.signature
+                'signature': file_to_share.signature,
+                'timestamp': file_to_share.signed_at.isoformat() if file_to_share.signed_at else None
             }
             json_data = json.dumps(signature_data, indent=4)
             original_filename, original_ext = os.path.splitext(file_to_share.uploaded_file.name)
@@ -194,6 +204,7 @@ def verify_signature_view(request):
 
             signer_username = signature_data['signer_username']
             signature_base64 = signature_data['signature'].encode('utf-8')
+            timestamp = signature_data.get('timestamp')
 
             signer = User.objects.get(username=signer_username)
             key_pair = UserKeyPair.objects.get(user=signer)
@@ -202,10 +213,25 @@ def verify_signature_view(request):
             original_content = original_file.read()
             signature_bytes = base64.b64decode(signature_base64)
 
-            is_valid = verify_signature(public_key_bytes, original_content, signature_bytes)
+            if timestamp:
+                 message = original_content + timestamp.encode('utf-8')
+            else:
+                 message = original_content
+
+            is_valid = verify_signature(public_key_bytes, message, signature_bytes)
 
             if is_valid:
-                messages.success(request, f"Signature is VALID. Verified as signed by '{signer_username}'.")
+                msg = f"Signature is VALID. Verified as signed by '{signer_username}'"
+                if timestamp:
+                    from datetime import datetime
+                    try:
+                        dt = datetime.fromisoformat(timestamp)
+                        msg += f" on {dt.strftime('%Y-%m-%d %H:%M:%S')}."
+                    except ValueError:
+                         msg += f" (Timestamp: {timestamp})."
+                else:
+                    msg += "."
+                messages.success(request, msg)
             else:
                 messages.error(request, "Signature is INVALID. The file may have been altered or the signature is incorrect. ❌")
 

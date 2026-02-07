@@ -8,6 +8,7 @@ class UploadedFile(models.Model):
     uploaded_file = models.FileField(upload_to='uploads/')
     upload_date = models.DateTimeField(default=timezone.now)
     signature = models.TextField(blank=True, null=True)
+    signed_at = models.DateTimeField(blank=True, null=True)
     
     def __str__(self):
         return os.path.basename(self.uploaded_file.name)

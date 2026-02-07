@@ -1,84 +1,88 @@
+/* Custom Styles */
+
 body {
-  background: #fafafa;
-  color: #333333;
-  margin-top: 5rem;
+    background-color: #f8f9fa;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: #444444;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
-ul {
-  margin: 0;
+.bg-primary {
+    background-color: #0d6efd !important; /* Bootstrap Primary */
 }
 
-.bg-steel {
-  background-color: #5f788a;
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
 }
 
 .site-header .navbar-nav .nav-link {
-  color: #cbd5db;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
 }
 
 .site-header .navbar-nav .nav-link:hover {
-  color: #ffffff;
+    color: #ffffff;
 }
 
 .site-header .navbar-nav .nav-link.active {
-  font-weight: 500;
+    font-weight: 700;
+    color: #fff;
 }
 
 .content-section {
-  background: #ffffff;
-  padding: 10px 20px;
-  border: 1px solid #dddddd;
-  border-radius: 3px;
-  margin-bottom: 20px;
+    background: #ffffff;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
-.article-title {
-  color: #444444;
+.border-dashed {
+    border-style: dashed !important;
 }
 
-a.article-title:hover {
-  color: #428bca;
-  text-decoration: none;
+.cursor-pointer {
+    cursor: pointer;
 }
 
-.article-content {
-  white-space: pre-line;
+/* Enhancements for cards */
+.card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
 }
 
-.article-img {
-  height: 28px;
-  width: 28px;
-  margin-right: 4px;
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
-.article-metadata {
-  padding-bottom: 1px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid #e3e3e3
+/* Feature boxes */
+.feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: #fff;
+    border-radius: .75rem;
 }
 
-.article-metadata a:hover {
-  color: #333;
-  text-decoration: none;
-}
-
-.article-svg {
-  width: 25px;
-  height: 25px;
-  vertical-align: middle;
-}
-
-.account-img {
-  height: 125px;
-  width: 125px;
-  margin-right: 20px;
-  margin-bottom: 16px;
-}
-
-.account-heading {
-  font-size: 2.5rem;
+/* Footer */
+footer {
+    font-size: 0.9rem;
 }

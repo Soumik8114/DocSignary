@@ -1,31 +1,40 @@
 {% extends "core/base.html" %}
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="card-title text-center mb-4">Share Signed File via Email</h3>
-                    <p class="text-center text-muted">Enter the recipient's email address to send them the file:</p>
-                    <p class="text-center fw-bold mb-4">"{{ file }}"</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4 text-center">Share Signed Document</h2>
+        <p class="text-center text-muted mb-4">Send the signed document and its signature file via email.</p>
 
-                    <form method="post" action="{% url 'email_signature' file.id %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="recipient_email" class="form-label">Recipient's Email</label>
-                            <input type="email" class="form-control" id="recipient_email" name="recipient_email" required autofocus>
-                        </div>
+        <form method="post" class="card p-4 shadow-sm border-0">
+            {% csrf_token %}
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send-fill me-2"></i>Send Email
-                            </button>
-                            <a href="{% url 'user_file_list' %}" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
+            <div class="mb-3">
+                <label for="file" class="form-label fw-bold">Document:</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+                    <input type="text" class="form-control" value="{{ file }}" readonly>
                 </div>
             </div>
-        </div>
+
+            <div class="mb-3">
+                <label for="recipient_email" class="form-label fw-bold">Recipient Email:</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control" id="recipient_email" name="recipient_email" placeholder="name@example.com" required>
+                </div>
+                <div class="form-text">We'll attach both the document and the signature file.</div>
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-send me-2"></i>Send Email
+                </button>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="{% url 'user_file_list' %}" class="text-decoration-none">Back to My Uploads</a>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock content %}

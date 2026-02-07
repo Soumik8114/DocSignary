@@ -1,9 +1,16 @@
 {% extends "core/base.html" %}
 {% block content %}
-    <h2>You Have been Logged out</h2>
-    <div class="border-top pt-3">
-        <small class="text-muted">
-            <a href="{% url 'login' %}" class="ml-2">Log In Again</a>
-        </small>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 text-center">
+        <div class="card shadow-sm border-0 py-5">
+            <div class="card-body">
+                <i class="bi bi-box-arrow-right display-1 text-muted mb-4"></i>
+                <h2 class="mb-3">You have been logged out</h2>
+                <p class="text-muted mb-4">Thank you for using our service. See you again soon!</p>
+
+                <a href="{% url 'login' %}" class="btn btn-primary px-4">Log In Again</a>
+            </div>
+        </div>
     </div>
+</div>
 {% endblock content %}

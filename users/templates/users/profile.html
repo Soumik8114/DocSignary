@@ -1,24 +1,33 @@
 {% extends "core/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<div class="content-section">
-    <div class="media">
-        <img src="{{ user.profile.image.url }}" alt="" class="rounded-circle account-img">
-        <div class="media-body">
-            <h2 class="account-heading">{{ user.username }}</h2>
-            <p class="text-secondary">{{ user.email }}</p>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <div class="d-flex align-items-center mb-4">
+                    <img src="{{ user.profile.image.url }}" alt="{{ user.username }}" class="rounded-circle me-4 border" style="width: 100px; height: 100px; object-fit: cover;">
+                    <div>
+                        <h2 class="mb-0">{{ user.username }}</h2>
+                        <p class="text-muted mb-0">{{ user.email }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h4 class="mb-3">Update Profile</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <fieldset class="form-group mb-3">
+                        {{ u_form|crispy }}
+                        {{ p_form|crispy }}
+                    </fieldset>
+                    <div class="d-grid mt-4">
+                        <button class="btn btn-primary" type="submit">Update Profile</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Profile Info</legend>
-            {{ u_form|crispy }}
-            {{ p_form|crispy }}
-        </fieldset>
-        <div class="form-group">
-            <button class="btn btn-outline-info" type="submit">Upate</button>
-        </div>
-    </form>
-</div>  
+</div>
 {% endblock content %}

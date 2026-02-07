@@ -2,25 +2,33 @@
 {% load static %}
 {% block content %}
 
-<div class="card p-4 mt-5">
-    <h2>Verify Signature</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4 text-center">Verify Digital Signature</h2>
+        <p class="text-center text-muted mb-4">Upload the original file and its corresponding signature file to verify authenticity.</p>
 
-        <div class="mb-3">
-            <label for="originalFile" class="form-label">Original File</label>
-            <input class="form-control" type="file" id="originalFile" name="original_file" required>
-        </div>
+        <form method="post" enctype="multipart/form-data" class="needs-validation">
+            {% csrf_token %}
 
-        <div class="mb-3">
-            <label for="signatureFile" class="form-label">Signature File (.json)</label>
-            <input class="form-control" type="file" id="signatureFile" name="signature_file" required>
-        </div>
-        
-        <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Verify Signature</button>
-        </div>
-    </form>
+            <div class="mb-4">
+                <label for="originalFile" class="form-label fw-bold">1. Original File</label>
+                <input class="form-control" type="file" id="originalFile" name="original_file" required>
+                <div class="form-text">Upload the document you want to verify.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="signatureFile" class="form-label fw-bold">2. Signature File (.json)</label>
+                <input class="form-control" type="file" id="signatureFile" name="signature_file" accept=".json" required>
+                <div class="form-text">Upload the JSON signature file provided by the signer.</div>
+            </div>
+
+            <div class="d-grid mt-5">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-shield-check me-2"></i>Verify Signature
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 {% endblock content %}
